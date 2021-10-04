@@ -1,0 +1,14 @@
+1.1 .- ¿Qué comando se debe emplear para generar el ejecutable del programa (show_file)
+invocando directamente al compilador gcc (sin usar make)?
+
+gcc show_file.c -o show_file.out
+
+./show_file.out show_file.c 		//Ejecuta el programa con el mismo archivo como parámetro
+
+1.2 .- Indique dos comandos para llevar a cabo respectivamente la compilación del programa (generación de fichero objeto) y el enlazado del mismo de forma independiente.
+
+gcc -c show_file.c 					//Realiza la compilación del archivo .c y genera el archivo .o
+gcc show_file.o -o show_file.out	//Realiza el enlazado del archivo .o y genera el ejecutable
+
+./show_file.out show_file.c			//Ejecuta el programa con el mismo archivo como parámetro
+	
