@@ -18,6 +18,23 @@ int
 copynFile(FILE * origin, FILE * destination, int nBytes)
 {
 	// Complete the function
+	origin = fopen(origin, "r");
+	destination = fopen(destination, "w");
+
+	if(origin != NULL && destination != NULL){
+
+	for(int i = 0; i < nBytes; ++i){
+		int c = fgetc (origin);
+
+		if(c != EOF){
+			fputc ( c, destination );
+		}
+	}
+	fclose(origin); fclose(destination);
+
+	return EXIT_SUCCESS;
+	}
+
 	return -1;
 }
 
@@ -36,6 +53,17 @@ char*
 loadstr(FILE * file)
 {
 	// Complete the function
+
+	file = fopen(file, "r");
+	int c; int cont = 0;
+	if (file != NULL){
+		while(c = fgetc (file) != EOF) cont++;
+	}
+
+	int *ptr = malloc(cont);
+
+	
+
 	return NULL;
 }
 
@@ -52,6 +80,17 @@ stHeaderEntry*
 readHeader(FILE * tarFile, int *nFiles)
 {
 	// Complete the function
+
+	// stHeaderEntry* array=NULL;
+	// int nr_files=0;
+	// //... Leemos el numero de ficheros (N) del tarFile y lo volcamos en nr_files ...
+	// /* Reservamos memoria para el array */
+	// array=malloc(sizeof(stHeaderEntry)*nr_files);
+	// //... Leemos la metainformacion del tarFile y la volcamos en el array ...
+	// /* Devolvemos los valores le´ıdos a la funci´on invocadora */
+	// (*nFiles)=nr_files;
+	// return (array);
+
 	return NULL;
 }
 
@@ -80,6 +119,24 @@ int
 createTar(int nFiles, char *fileNames[], char tarName[])
 {
 	// Complete the function
+
+	FILE* dest = fopen(tarName, "w+");
+
+	int c,ret;
+	if(dest != NULL){
+		for(int i = 0; i < nFiles; ++i){
+			FILE* file = fopen(fileNames[i], "r");
+
+			while ( (c = fgetc ( file )) != EOF ) {
+        		fputc ( c, dest );
+    		}
+			fclose(file);
+		}
+		fclose(dest);
+
+		return EXIT_SUCCESS;
+	}
+
 	return EXIT_FAILURE;
 }
 
