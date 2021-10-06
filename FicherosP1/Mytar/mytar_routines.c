@@ -53,16 +53,22 @@ char*
 loadstr(FILE * file)
 {
 	// Complete the function
-
-	file = fopen(file, "r");
-	int c; int cont = 0;
-	if (file != NULL){
-		while(c = fgetc (file) != EOF) cont++;
-	}
-
-	int *ptr = malloc(cont);
-
 	
+	int cont = 0;
+	if (file != NULL){
+		while(getc(file) != EOF) cont++;
+
+		fseek(file, 0, SEEK_END);
+		cont = ftell(file);
+	}
+	char* ptr = malloc(cont);
+
+	rewind(file);
+
+	if(fread(ptr, cont, 1, file) >= 1) {
+		fwrite(ptr, cont, 1, stdout);
+		return ptr;
+	}
 
 	return NULL;
 }

@@ -11,4 +11,40 @@ gcc -c show_file.c 					//Realiza la compilación del archivo .c y genera el arc
 gcc -o show_file.out show_file.o	//Realiza el enlazado del archivo .o y genera el ejecutable
 
 ./show_file.out show_file.c			//Ejecuta el programa con el mismo archivo como parámetro
-	
+
+1.3 .-Realice las siguientes modificaciones en el programa show_file.c:
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <err.h>
+
+int main(int argc, char* argv[]) {
+	FILE* file=NULL;
+	int c,ret;
+
+	if (argc!=3) {
+		fprintf(stderr,"Usage: %s <file_name> <block_size>\n", argv[0]);
+		exit(1);
+	}
+
+	/* Open file */
+	if ((file = fopen(argv[1], "r")) == NULL)
+		err(2,"The input file %s could not be opened",argv[1]);
+
+	int size;
+    sscanf(argv[2], "%d", &size);
+
+    int* ptr = malloc(size);
+    
+    int nmemb = 1;
+
+    while(fread(ptr, size, nmemb, file) >= nmemb){
+        fwrite(ptr, size, nmemb, stdout);
+    }
+
+	fclose(file);
+	return 0;
+}
+
+
+1.4 .-	(No nos apetece profe)
