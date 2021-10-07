@@ -3,10 +3,6 @@
 #include <err.h>
 #include <limits.h>
 
-
-int createTar(int nFiles, char *fileNames[], char tarName[]);
-int copynFile(FILE * origin, FILE * destination, int nBytes);
-
 int main(int argc, char* argv[]) {
 	FILE* file=NULL;
 	int c, ret;

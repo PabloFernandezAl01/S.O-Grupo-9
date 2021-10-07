@@ -1,13 +1,11 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
-       
 #include "mytar.h"
        
-char use[]="Usage: tar -c|x -f file_mytar [file1 file2 ...]\n";
+char use[] = "Usage: tar -c|x -f file_mytar [file1 file2 ...]\n";
 
 int main(int argc, char *argv[]) {
-
   int opt, nExtra, retCode=EXIT_SUCCESS;
   flags flag=NONE;
   char *tarName=NULL;
@@ -32,6 +30,7 @@ int main(int argc, char *argv[]) {
       default:
         flag=ERROR;
     }
+
     //Was an invalid option detected?
     if(flag==ERROR){
       fprintf(stderr,"%s",use);
