@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/Exercises/Show_file/show_file",
             "args": [],
-            "stopAtEntry": false,
+            "stopAtEntry": true,
             "cwd": "${fileDirname}",
             "environment": [],
             "externalConsole": false,

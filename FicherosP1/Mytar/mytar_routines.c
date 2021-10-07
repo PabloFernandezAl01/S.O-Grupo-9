@@ -18,24 +18,20 @@ int
 copynFile(FILE * origin, FILE * destination, int nBytes)
 {
 	// Complete the function
-	origin = fopen(origin, "r");
-	destination = fopen(destination, "w");
 
-	if(origin != NULL && destination != NULL){
+	int copiedBytes = 0;
+	int c;
 
-	for(int i = 0; i < nBytes; ++i){
-		int c = fgetc (origin);
+	//Mientras que los bytes copiados no sea menos que los
+	//que se tienen que copiar o no se ha llegado al final del archivo
+	while(copiedBytes < nBytes && (c = getc(origin)) != feof(origin)) {
 
-		if(c != EOF){
-			fputc ( c, destination );
-		}
-	}
-	fclose(origin); fclose(destination);
-
-	return EXIT_SUCCESS;
+		//Escribe char a char
+		putc((unsigned char) c, destination);
+		copiedBytes++;
 	}
 
-	return -1;
+	return copiedBytes;
 }
 
 /** Loads a string from a file.
@@ -65,10 +61,7 @@ loadstr(FILE * file)
 
 	rewind(file);
 
-	if(fread(ptr, cont, 1, file) >= 1) {
-		fwrite(ptr, cont, 1, stdout);
-		return ptr;
-	}
+	if(fread(ptr, cont, 1, file) >= 1) return ptr;
 
 	return NULL;
 }
@@ -87,15 +80,27 @@ readHeader(FILE * tarFile, int *nFiles)
 {
 	// Complete the function
 
-	// stHeaderEntry* array=NULL;
-	// int nr_files=0;
-	// //... Leemos el numero de ficheros (N) del tarFile y lo volcamos en nr_files ...
-	// /* Reservamos memoria para el array */
-	// array=malloc(sizeof(stHeaderEntry)*nr_files);
-	// //... Leemos la metainformacion del tarFile y la volcamos en el array ...
-	// /* Devolvemos los valores le´ıdos a la funci´on invocadora */
-	// (*nFiles)=nr_files;
-	// return (array);
+	stHeaderEntry* array=NULL;
+	int nr_files = 0;
+
+	//... Leemos el numero de ficheros (N) del tarFile y lo volcamos en nr_files ...
+
+	char c = getc(tarFile);
+	nr_files = c -'0';
+	
+	/* Reservamos memoria para el array */
+	array = malloc(sizeof(stHeaderEntry)*nr_files);
+
+	//... Leemos la metainformacion del tarFile y la volcamos en el array ...
+	/* Devolvemos los valores leıdos a la funcion invocadora */
+	
+	for(int i = 0; i < nr_files; ++i) {
+		array[i].name = loadstr(tarFile);
+		fread(&array[i].size, sizeof(array[i].size), 1, tarFile);
+	}
+
+	(*nFiles) = nr_files;
+	return (array);
 
 	return NULL;
 }
@@ -126,24 +131,84 @@ createTar(int nFiles, char *fileNames[], char tarName[])
 {
 	// Complete the function
 
-	FILE* dest = fopen(tarName, "w+");
+	 int i, j;
+	 FILE* tarfile, *inputFile;
+	 stHeaderEntry* header;
+	 unsigned int headersize;
 
-	int c,ret;
-	if(dest != NULL){
-		for(int i = 0; i < nFiles; ++i){
-			FILE* file = fopen(fileNames[i], "r");
+	//Si el numero de archivos es 0 o menor
+	 if(nFiles <= 0){
+		 fprintf(stderr, "%s", use);
+		 return (EXIT_FAILURE);
+	 }
 
-			while ( (c = fgetc ( file )) != EOF ) {
-        		fputc ( c, dest );
-    		}
-			fclose(file);
-		}
-		fclose(dest);
+	//Si no se puede abrir el fichero
+	 if((tarfile == fopen(tarName, "wx")) == NULL){
+		 fprintf(stderr, "El archivo mytar %s podría no haberse abierto: ", tarName);
+		 perror(NULL);
+		 return (EXIT_FAILURE);
+	 }
 
-		return EXIT_SUCCESS;
+	//Reserva el tamaño de la cabecera (con los nombres con tamaño fijo, porque van a ser punteros)
+	//Si no puede reservar el tamaño salta una excepción
+	 if(header = malloc(sizeof(stHeaderEntry)*nFiles) == NULL){
+		 perror("Error al alojar memoria en la cabecera del archivo mtar");
+		 flcose(tarfile);
+		 remove(tarName);
+	 }
+
+	//De momento el tamaño de la cabecera es el tamaño de un int para indicar el número de archivos que hay en el mtar
+	 headersize = sizeof(int);
+
+	//Para cada archivo, reserva en memoria el tamaño de su nombre (string)
+	//y aumenta el tamaño de la cabecera con el tamaño del nombre y el tamaño del size en bytes que ocupa el fichero
+	 for(int i = 0; i < nFiles; i++){
+		 int namesize = strlen(fileNames[i]+1);
+
+		 header[i].name = (char*) malloc(namesize);
+		 strcpy(header[i].name, fileNames[i]);
+
+		 headersize+= namesize+ sizeof(header->size);
+	 }
+
+	//Coloca el cursor en la posicion donde debería a empezar a escribir los ficheros
+	 fseek(tarfile, headersize, SEEK_SET);
+
+	 for(int i = 0; i < nFiles; i++){
+		 if(inputFile = fopen(fileNames[i], "r") == NULL){
+			 fprintf(stderr, "No es posible abrir el archivo de entrada %s : \n", fileNames[i]);
+			 perror(NULL);
+			 fclose(tarfile);
+			 remove(tarName);
+			 for(j = 0; j < nFiles; j++){
+				free(header[j].name);
+			 }
+			 free(header);
+			 return (EXIT_FAILURE);
+		 }
+
+		//Los escribe y guarda en el array de stHeaderEntry lo que ocupa en bytes
+		 header[i].size = copynFile(inputFile, tarfile, INT_MAX);
+
+		 //Va cerrando cada archivo ya copiado
+		 fclose(inputFile); 
+	 }
+
+	//Vuelve a apuntar al comienzo del archivo para rellenar la cabecera una vez obtenida la información
+	rewind(tarfile);
+
+	fwrite(&nFiles, sizeof(int), 1, tarfile);
+
+	for(int i = 0; i < nFiles; i++){
+		fwrite(header[i].name, 1, strlen(header[i].name)+1, tarfile);
+		fwrite(&header[i].size, sizeof(header[i].size), 1, tarfile);
 	}
 
-	return EXIT_FAILURE;
+	for(int j = 0; j < nFiles; j++) free(header[j].name);
+	free(header);
+
+	return (EXIT_SUCCESS);
+
 }
 
 /** Extract files stored in a tarball archive
@@ -164,5 +229,25 @@ int
 extractTar(char tarName[])
 {
 	// Complete the function
+	stHeaderEntry* header = NULL;
+	int nArchivos, i = 0, copiedBytes = 0;
+	FILE* tarFile = NULL;
+
+	if( tarFile = fopen(tarFile, "r") != NULL) {
+		header = readHeader(tarFile, &nArchivos);
+
+		for(int i = 0; i < nArchivos; i++){
+			FILE* newFile = fopen(header[i].name, "w");
+			copiedBytes = copynFile(tarFile, newFile, header[i].size);
+			fclose(newFile);
+		}
+
+		for(int i = 0; i < nArchivos; i++) free(header[i].name);
+		free(header);
+		fclose(tarFile);
+
+		return EXIT_SUCCESS;
+	}
+
 	return EXIT_FAILURE;
 }
