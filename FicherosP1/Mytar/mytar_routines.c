@@ -131,7 +131,6 @@ createTar(int nFiles, char *fileNames[], char tarName[])
 {
 	// Complete the function
 
-	 int i, j;
 	 FILE* tarfile, *inputFile;
 	 stHeaderEntry* header;
 	 unsigned int headersize;
@@ -143,7 +142,7 @@ createTar(int nFiles, char *fileNames[], char tarName[])
 	 }
 
 	//Si no se puede abrir el fichero
-	 if((tarfile == fopen(tarName, "wx")) == NULL){
+	 if((tarfile = fopen(tarName, "wx")) == NULL){
 		 fprintf(stderr, "El archivo mytar %s podría no haberse abierto: ", tarName);
 		 perror(NULL);
 		 return (EXIT_FAILURE);
@@ -151,9 +150,9 @@ createTar(int nFiles, char *fileNames[], char tarName[])
 
 	//Reserva el tamaño de la cabecera (con los nombres con tamaño fijo, porque van a ser punteros)
 	//Si no puede reservar el tamaño salta una excepción
-	 if(header = malloc(sizeof(stHeaderEntry)*nFiles) == NULL){
+	 if((header = malloc(sizeof(stHeaderEntry)*nFiles)) == NULL){
 		 perror("Error al alojar memoria en la cabecera del archivo mtar");
-		 flcose(tarfile);
+		 fclose(tarfile);
 		 remove(tarName);
 	 }
 
@@ -175,12 +174,12 @@ createTar(int nFiles, char *fileNames[], char tarName[])
 	 fseek(tarfile, headersize, SEEK_SET);
 
 	 for(int i = 0; i < nFiles; i++){
-		 if(inputFile = fopen(fileNames[i], "r") == NULL){
+		 if((inputFile = fopen(fileNames[i], "r")) == NULL){
 			 fprintf(stderr, "No es posible abrir el archivo de entrada %s : \n", fileNames[i]);
 			 perror(NULL);
 			 fclose(tarfile);
 			 remove(tarName);
-			 for(j = 0; j < nFiles; j++){
+			 for(int j = 0; j < nFiles; j++){
 				free(header[j].name);
 			 }
 			 free(header);
@@ -230,15 +229,15 @@ extractTar(char tarName[])
 {
 	// Complete the function
 	stHeaderEntry* header = NULL;
-	int nArchivos, i = 0, copiedBytes = 0;
+	int nArchivos;
 	FILE* tarFile = NULL;
 
-	if( tarFile = fopen(tarFile, "r") != NULL) {
+	if( (tarFile = fopen(tarName, "r")) != NULL) {
 		header = readHeader(tarFile, &nArchivos);
 
 		for(int i = 0; i < nArchivos; i++){
 			FILE* newFile = fopen(header[i].name, "w");
-			copiedBytes = copynFile(tarFile, newFile, header[i].size);
+			copynFile(tarFile, newFile, header[i].size);
 			fclose(newFile);
 		}
 
